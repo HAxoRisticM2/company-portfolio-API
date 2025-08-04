@@ -1,27 +1,10 @@
 const Testimonial = require("../models/testimonialModel");
+const factory = require("../contollers/handlerFactory");
 
-exports.getAllTestimonials = async (req, res) => {
-  const testimonial = await Testimonial.find();
-  const totalTestimonial = testimonial.length;
-  res.status(201).json({
-    testimonial,
-    totalTestimonial,
-  });
-};
+exports.getAllTestimonials = factory.getAll(Testimonial);
 
-exports.createTestimonial = async (req, res) => {
-  const testimonial = new Testimonial(req.body);
-  await testimonial.save();
-  res.status(201).json(testimonial);
-};
+exports.createTestimonial = factory.createOne(Testimonial);
 
-exports.deleteTestimonial = async (req, res) => {
-  await Testimonial.findByIdAndDelete(req.params.id);
-  res.json("Deleted");
-};
+exports.deleteTestimonial = factory.deleteOne(Testimonial);
 
-exports.updateTestimonial = async (req, res) => {
-  const updatedService = Service.findByIdAndUpdate(req.params.id);
-  await updatedService.save();
-  res.status(201).json("updated");
-};
+exports.updateTestimonial = factory.updateOne(Testimonial);

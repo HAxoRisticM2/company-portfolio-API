@@ -1,27 +1,30 @@
 const express = require("express");
 const router = express.Router();
-const portfolioController = require("../contollers/portfolioController");
-const authController = require("../contollers/authController");
 
-router.get("/", portfolioController.getAllProjects);
-router.get("/:category", portfolioController.getProjectOnCategory);
+const authController = require("../contollers/authController");
+const userController = require("../contollers/userController");
+const { route } = require("./userRouter");
+
+router.post("/login", authController.loginUser());
+
+router.get("/", userController.getAllUsers);
 router.post(
   "/",
   authController.protect,
   authController.restrictTo("admin"),
-  portfolioController.createProject
+  userController.createOne
+);
+router.delete(
+  "/:id",
+  authController.protect,
+  authController.restrictTo("admin", "editor"),
+  userController.deleteOne
 );
 router.patch(
   "/:id",
   authController.protect,
   authController.restrictTo("admin", "editor"),
-  portfolioController.updateProject
-);
-router.delete(
-  "/:id",
-  authController.protect,
-  authController.restrictTo("admin"),
-  portfolioController.deleteProject
+  userController.UpdateOne
 );
 
 module.exports = router;
