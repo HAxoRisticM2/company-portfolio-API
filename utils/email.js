@@ -1,8 +1,12 @@
 const nodemailer = require("nodemailer");
 
 exports.sendServiceRequest = async (req, res) => {
-  console.log("📦 Incoming request body:", req.body);
+  console.log("📩 Incoming headers:", req.headers);
+  console.log("📦 Incoming body:", req.body);
   const { name, email, company, service, message } = req.body;
+  if (!name || !email || !service) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
 
   try {
     // 1. Create transporter
@@ -16,7 +20,7 @@ exports.sendServiceRequest = async (req, res) => {
 
     // 2. Setup email options
     let mailOptions = {
-      from: `"${name}" <${email}>`,
+      from: process.env.GMAIL_SEND_MAIL_FROM,
       to: process.env.GMAIL_SEND_MAIL_TO,
       subject: `New Service Request from ${name}`,
       html: `
