@@ -4,9 +4,11 @@ const authController = require("../contollers/authController");
 const userController = require("../contollers/userController");
 const { route } = require("./userRouter");
 
-router.post("/login", authController.loginUser());
+router.post("/login", authController.loginUser);
+router.post("/signup", authController.signup);
 
 router.get("/", userController.getAllUsers);
+
 router.post(
   "/",
   authController.protect,

@@ -15,7 +15,7 @@ router.post(
   authController.protect,
   authController.restrictTo("admin"),
   uploadSingle("image"), // Handles file upload
-  processImage("Porfolio"), // Compress & save
+  processImage("Portfolio"), // Compress & save
   addImageToBody("image"), // Injects URL into req.body
   portfolioController.createProject
 );
@@ -24,7 +24,7 @@ router.patch(
   authController.protect,
   authController.restrictTo("admin", "editor"),
   uploadSingle("image"), // Handles file upload
-  processImage("OurTeam"), // Compress & save
+  processImage("Portfolio"), // Compress & save
   addImageToBody("image"), // Injects URL into req.body
   portfolioController.updateProject
 );

@@ -7,25 +7,22 @@ const addImageToBody = require("../utils/addImageToBody");
 
 router.get("/", testimonialController.getAllTestimonials);
 
-router.use(
-  authController.protect,
-  authController.restrictTo("admin", "editor")
+router.post(
+  "/",
+  uploadSingle("image"),
+  processImage("Testimonial"),
+  addImageToBody("image"),
+  testimonialController.createTestimonial
 );
 
-router
-  .route("/:id")
-  .post(
-    uploadSingle("image"),
-    processImage("Service"),
-    addImageToBody("image"),
-    testimonialController.createTestimonial
-  )
-  .patch(
-    uploadSingle("image"),
-    processImage("Service"),
-    addImageToBody("image"),
-    testimonialController.updateTestimonial
-  )
-  .delete(testimonialController.deleteTestimonial);
+router.patch(
+  "/:id",
+  uploadSingle("image"),
+  processImage("Testimonial"),
+  addImageToBody("image"),
+  testimonialController.updateTestimonial
+);
+
+router.delete("/:id", testimonialController.deleteTestimonial);
 
 module.exports = router;

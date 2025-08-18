@@ -1,10 +1,13 @@
-// middleware/authMiddleware.js
+// controllers/authController.js (or middleware/authMiddleware.js)
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const bcrypt = require("bcryptjs");
 
+// ========================
+// JWT Utility
+// ========================
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.EXPIRES_IN,
@@ -14,7 +17,7 @@ const signToken = (id) => {
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
 
-  // Add token to response header
+  // Optionally add token to response header
   res.setHeader("Authorization", `Bearer ${token}`);
 
   res.status(statusCode).json({
@@ -26,36 +29,47 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 
-exports.signup = () =>
-  catchAsync(async (req, res, next) => {
-    const { name, email, password, role } = req.body;
-    const newUser = await User.create({ name, email, password, role });
-    createSendToken(newUser, 200, res);
-  });
+// ========================
+// AUTH CONTROLLERS
+// ========================
+exports.signup = catchAsync(async (req, res, next) => {
+  const { name, email, password, role } = req.body;
 
-exports.loginUser = () =>
-  catchAsync(async (req, res, next) => {
-    const { email, password } = req.body;
+  const newUser = await User.create({ name, email, password, role });
 
-    if (!email || !password) {
-      return next(new AppError("please provide email and password", 400));
-    }
+  createSendToken(newUser, 201, res);
+});
 
-    const user = await User.findOne({ email });
-    if (!user) return next(new AppError("Invalid Username or password", 401));
+exports.loginUser = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
 
-    // Compare passwords
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return next(new AppError("Invalid Username or password", 401));
+  // 1) Check if email and password exist
+  if (!email || !password) {
+    return next(new AppError("Please provide email and password", 400));
+  }
 
-    createSendToken(user, 200, res);
-  });
+  // 2) Check if user exists & password is correct
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(new AppError("Invalid email or password", 401));
+  }
 
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return next(new AppError("Invalid email or password", 401));
+  }
+
+  // 3) Send token
+  createSendToken(user, 200, res);
+});
+
+// ========================
+// PROTECT ROUTE
+// ========================
 exports.protect = catchAsync(async (req, res, next) => {
   let token;
 
-  // 1. Get token from Authorization header
+  // 1) Get token from Authorization header
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
@@ -65,32 +79,39 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   if (!token) {
     return next(
-      new AppError("You are not logged in! Please login to get access.", 401)
+      new AppError("You are not logged in! Please log in to get access.", 401)
     );
   }
 
-  // 2. Verify token
+  // 2) Verify token
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-  // 3. Check if user still exists
+  // 3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
-    return next(new AppError("The user no longer exists.", 401));
+    return next(
+      new AppError("The user belonging to this token no longer exists.", 401)
+    );
   }
 
-  // 4. Attach user to request
+  // 4) Attach user to request
   req.user = currentUser;
   console.log("Token verified:", req.user);
 
   next();
 });
 
+// ========================
+// RESTRICT TO CERTAIN ROLES
+// ========================
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role))
-      return res
-        .status(403)
-        .json({ message: "You do not have permission to perform this action" });
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        status: "fail",
+        message: "You do not have permission to perform this action",
+      });
+    }
     console.log("User role:", req.user.role);
 
     next();
