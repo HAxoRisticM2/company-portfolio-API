@@ -1,0 +1,38 @@
+<form id="serviceForm">
+  <input type="text" name="name" placeholder="Your Name" required />
+  <input type="email" name="email" placeholder="Your Email" required />
+  <input type="text" name="company" placeholder="Company" />
+  <input type="text" name="service" placeholder="Service Needed" required />
+  <textarea name="message" placeholder="Your Message"></textarea>
+  <button type="submit">Send Request</button>
+</form>
+
+<script>
+  document.querySelector("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const data = {
+      name: document.querySelector("#name").value,
+      email: document.querySelector("#email").value,
+      company: document.querySelector("#company").value,
+      service: document.querySelector("#service").value,
+      message: document.querySelector("#message").value,
+    };
+
+    try {
+      const res = await fetch(
+        "http://localhost:4000/api/mail/send-service-request",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+
+      const result = await res.json();
+      alert(result.message || "Request sent!");
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  });
+</script>
